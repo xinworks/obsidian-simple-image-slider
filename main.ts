@@ -165,8 +165,8 @@ export default class SimpleImageSliderPlugin extends Plugin {
         }
       });
 
-      previousButton.addEventListener("click", () => showSlide(currentIndex - 1));
-      nextButton.addEventListener("click", () => showSlide(currentIndex + 1));
+      this.bindNavigationButton(previousButton, () => showSlide(currentIndex - 1));
+      this.bindNavigationButton(nextButton, () => showSlide(currentIndex + 1));
     }
 
     wrapper.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -231,5 +231,26 @@ export default class SimpleImageSliderPlugin extends Plugin {
     }
 
     update();
+  }
+
+  private bindNavigationButton(
+    button: HTMLButtonElement,
+    onNavigate: () => void
+  ): void {
+    button.addEventListener("pointerdown", (event: PointerEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+
+    button.addEventListener("pointerup", (event: PointerEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+
+    button.addEventListener("click", (event: MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onNavigate();
+    });
   }
 }
