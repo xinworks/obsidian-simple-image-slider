@@ -1,0 +1,9 @@
+{
+  "id": "simple-image-slider",
+  "name": "Simple Image Slider",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Render Obsidian image embeds as a lightweight slider with caption overlays.",
+  "author": "XIN",
+  "isDesktopOnly": false
+}
