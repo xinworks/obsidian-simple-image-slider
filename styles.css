@@ -170,13 +170,21 @@ button.simple-image-slider__button--next {
 }
 
 .simple-image-caption {
+  align-items: center;
   display: block;
+  flex-direction: column;
   margin: 12px auto 16px;
   max-width: 100%;
   text-align: center;
 }
 
+.internal-embed.image-embed.simple-image-caption,
+.external-embed.image-embed.simple-image-caption {
+  display: flex;
+}
+
 .simple-image-caption::after {
+  box-sizing: border-box;
   color: var(--text-muted);
   content: attr(data-simple-image-caption);
   display: block;
@@ -185,9 +193,11 @@ button.simple-image-slider__button--next {
   letter-spacing: 0;
   line-height: 1.45;
   margin-top: 6px;
+  max-width: 100%;
   overflow-wrap: anywhere;
   padding: 0 6px;
   text-align: center;
+  width: 100%;
 }
 
 .simple-image-caption[data-simple-image-caption=""]::after {
