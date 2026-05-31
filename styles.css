@@ -1,11 +1,15 @@
 .simple-image-slider {
-  --sis-control-fg: rgba(23, 23, 23, 0.24);
-  --sis-control-fg-hover: rgba(23, 23, 23, 0.58);
+  --sis-control-fg: rgba(23, 23, 23, 0.32);
+  --sis-control-fg-hover: rgba(23, 23, 23, 0.56);
   --sis-caption-fg: var(--text-muted);
-  --sis-chip-bg: rgba(255, 255, 255, 0.76);
-  --sis-chip-fg: rgba(23, 23, 23, 0.62);
+  --sis-chip-bg: transparent;
+  --sis-chip-fg: rgba(23, 23, 23, 0.42);
   --sis-radius: 8px;
-  --sis-shadow: 0 2px 8px rgba(0, 0, 0, 0.035);
+  --sis-frame-border: color-mix(
+    in srgb,
+    var(--background-modifier-border) 55%,
+    transparent
+  );
 
   display: flex;
   flex-direction: column;
@@ -23,12 +27,10 @@
 .simple-image-slider__frame {
   align-items: center;
   aspect-ratio: 4 / 3;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0)),
-    var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
+  background: transparent;
+  border: 1px solid var(--sis-frame-border);
   border-radius: var(--sis-radius);
-  box-shadow: var(--sis-shadow);
+  box-shadow: none;
   display: flex;
   justify-content: center;
   max-height: min(78vh, 680px);
@@ -105,7 +107,7 @@ button.simple-image-slider__button {
   height: 44px;
   justify-content: center;
   line-height: 1;
-  opacity: 0.18;
+  opacity: 0;
   padding: 0;
   pointer-events: auto;
   position: absolute;
@@ -125,14 +127,14 @@ button.simple-image-slider__button svg {
 .simple-image-slider:hover button.simple-image-slider__button,
 .simple-image-slider:focus-within button.simple-image-slider__button,
 .simple-image-slider__frame:active button.simple-image-slider__button {
-  opacity: 0.42;
+  opacity: 0.28;
 }
 
 button.simple-image-slider__button:hover,
 button.simple-image-slider__button:focus-visible {
   background: transparent !important;
   color: var(--sis-control-fg-hover);
-  opacity: 0.82;
+  opacity: 0.58;
 }
 
 button.simple-image-slider__button--previous {
@@ -145,15 +147,15 @@ button.simple-image-slider__button--next {
 
 .simple-image-slider__status {
   background: var(--sis-chip-bg);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   color: var(--sis-chip-fg);
-  font-size: 0.72em;
+  font-size: 0.68em;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
-  padding: 4px 8px;
+  opacity: 0.6;
+  padding: 0;
   position: absolute;
   right: 12px;
   text-align: center;
