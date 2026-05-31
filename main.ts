@@ -1,4 +1,10 @@
-import { MarkdownPostProcessorContext, Plugin, setIcon, TFile } from "obsidian";
+import {
+  Editor,
+  MarkdownPostProcessorContext,
+  Plugin,
+  setIcon,
+  TFile
+} from "obsidian";
 import {
   fileNameFromPath,
   isImageSizeAlias,
@@ -30,6 +36,14 @@ export default class SimpleImageSliderPlugin extends Plugin {
   private normalCaptionRenderTimer: number | null = null;
 
   async onload(): Promise<void> {
+    this.addCommand({
+      id: "insert-image-slider-block",
+      name: "Insert image slider block",
+      editorCallback: (editor) => {
+        this.insertImageSliderBlock(editor);
+      }
+    });
+
     this.registerMarkdownPostProcessor((el, ctx) => {
       this.renderNormalImageCaptions(el, ctx);
     });
@@ -83,6 +97,23 @@ export default class SimpleImageSliderPlugin extends Plugin {
         await this.renderImageSlider(source, el, ctx);
       }
     );
+  }
+
+  private insertImageSliderBlock(editor: Editor): void {
+    const selection = editor.getSelection();
+    const trimmedSelection = selection.trim();
+    const cursor = editor.getCursor();
+    const body = trimmedSelection || "![[|caption]]";
+    const block = `\`\`\`image-slider\n${body}\n\`\`\``;
+
+    editor.replaceSelection(block);
+
+    if (!trimmedSelection) {
+      editor.setCursor({
+        line: cursor.line + 1,
+        ch: 3
+      });
+    }
   }
 
   private scheduleNormalImageCaptionRender(): void {

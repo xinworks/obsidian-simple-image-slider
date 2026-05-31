@@ -14,6 +14,7 @@ It is intentionally small. It supports Obsidian image wikilinks, click navigatio
 - Keep captions below images so they do not cover image content.
 - Hide visual controls by default for a quiet article-style layout.
 - Add visible captions to ordinary captioned images without modifying note content.
+- Insert a starter slider block from the command palette, then bind it to a hotkey if desired.
 
 ## Usage
 
@@ -37,6 +38,8 @@ Supported slider line forms:
 ```
 
 The text after `|` is displayed as a caption under the image. If a slide has no caption, no caption is shown.
+
+You can also run `Simple Image Slider: Insert image slider block` from the command palette. To make it faster, bind that command in Obsidian's Hotkeys settings.
 
 Ordinary image captions are also supported:
 
