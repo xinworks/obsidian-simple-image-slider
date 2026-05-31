@@ -55,6 +55,7 @@ For ordinary images, `|300` and `|300x200` are treated as Obsidian size aliases,
 - One image is shown at a time.
 - Previous and next controls wrap around at the ends.
 - Horizontal swipe or drag changes slides.
+- The current image is preserved when the same slider block re-renders after editing.
 - Small accidental drag movement is ignored.
 - The image uses `object-fit: contain`.
 - The image area uses a stable 4:3 canvas and prioritizes filling the available width.

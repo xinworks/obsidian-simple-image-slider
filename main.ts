@@ -32,8 +32,14 @@ interface ResolutionResult {
   skippedCount: number;
 }
 
+interface SliderState {
+  index: number;
+  path: string;
+}
+
 export default class SimpleImageSliderPlugin extends Plugin {
   private normalCaptionRenderTimer: number | null = null;
+  private sliderStates = new Map<string, SliderState>();
 
   async onload(): Promise<void> {
     this.addCommand({
@@ -250,6 +256,7 @@ export default class SimpleImageSliderPlugin extends Plugin {
     const parsed = parseImageSliderSource(source);
     const resolved = this.resolveSlides(parsed.slides, ctx.sourcePath);
     const skippedCount = parsed.unsupportedLines.length + resolved.skippedCount;
+    const stateKey = this.sliderStateKey(source, el, ctx);
 
     if (resolved.slides.length === 0) {
       el.createDiv({
@@ -259,7 +266,41 @@ export default class SimpleImageSliderPlugin extends Plugin {
       return;
     }
 
-    this.createSlider(el, resolved.slides, skippedCount);
+    this.createSlider(
+      el,
+      resolved.slides,
+      skippedCount,
+      this.restoredSliderIndex(stateKey, resolved.slides),
+      (index, path) => {
+        this.sliderStates.set(stateKey, { index, path });
+      }
+    );
+  }
+
+  private sliderStateKey(
+    source: string,
+    el: HTMLElement,
+    ctx: MarkdownPostProcessorContext
+  ): string {
+    const section = ctx.getSectionInfo(el);
+
+    return section
+      ? `${ctx.sourcePath}:${section.lineStart}`
+      : `${ctx.sourcePath}:${source}`;
+  }
+
+  private restoredSliderIndex(stateKey: string, slides: ResolvedSlide[]): number {
+    const state = this.sliderStates.get(stateKey);
+    if (!state) {
+      return 0;
+    }
+
+    const pathIndex = slides.findIndex((slide) => slide.path === state.path);
+    if (pathIndex >= 0) {
+      return pathIndex;
+    }
+
+    return Math.min(Math.max(state.index, 0), slides.length - 1);
   }
 
   private resolveSlides(
@@ -315,9 +356,11 @@ export default class SimpleImageSliderPlugin extends Plugin {
   private createSlider(
     container: HTMLElement,
     slides: ResolvedSlide[],
-    skippedCount: number
+    skippedCount: number,
+    initialIndex: number,
+    onSlideChange: (index: number, path: string) => void
   ): void {
-    let currentIndex = 0;
+    let currentIndex = Math.min(Math.max(initialIndex, 0), slides.length - 1);
     let pointerStartX: number | null = null;
     let pointerStartY: number | null = null;
     let touchStartX: number | null = null;
@@ -358,6 +401,10 @@ export default class SimpleImageSliderPlugin extends Plugin {
 
     const normalizeIndex = (index: number): number =>
       (index + slides.length) % slides.length;
+
+    const rememberCurrentSlide = (): void => {
+      onSlideChange(currentIndex, slides[currentIndex].path);
+    };
 
     const setTrackOffset = (offsetPx: number, animated: boolean): void => {
       track.toggleClass("simple-image-slider__track--animated", animated);
@@ -442,6 +489,7 @@ export default class SimpleImageSliderPlugin extends Plugin {
 
       onTrackTransitionEnd(() => {
         currentIndex = normalizeIndex(currentIndex + direction);
+        rememberCurrentSlide();
         renderSlides();
         updateCaptionAndStatus();
         setTrackOffset(0, false);
@@ -659,6 +707,7 @@ export default class SimpleImageSliderPlugin extends Plugin {
     }
 
     update();
+    rememberCurrentSlide();
   }
 
   private bindNavigationButton(
