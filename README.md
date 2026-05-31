@@ -10,6 +10,7 @@ It is intentionally small. It supports Obsidian image wikilinks, click navigatio
 
 - Render multiple Obsidian image embeds as one slider.
 - Swipe or drag horizontally to move between images.
+- Click the counter to open an image list and jump directly to a slide.
 - Use left/right keyboard navigation when the slider has focus.
 - Keep captions below images so they do not cover image content.
 - Hide visual controls by default for a quiet article-style layout.
@@ -54,6 +55,7 @@ For ordinary images, `|300` and `|300x200` are treated as Obsidian size aliases,
 
 - One image is shown at a time.
 - Previous and next controls wrap around at the ends.
+- The counter opens a compact image list for quick slide switching.
 - Horizontal swipe or drag changes slides.
 - The current image is preserved when the same slider block re-renders after editing.
 - Small accidental drag movement is ignored.

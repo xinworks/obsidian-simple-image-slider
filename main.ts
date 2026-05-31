@@ -371,7 +371,6 @@ export default class SimpleImageSliderPlugin extends Plugin {
     const wrapper = container.createDiv({ cls: "simple-image-slider" });
     wrapper.tabIndex = 0;
     wrapper.setAttr("role", "group");
-    wrapper.setAttr("aria-label", "Image slider");
 
     const frame = wrapper.createDiv({ cls: "simple-image-slider__frame" });
     const track = frame.createDiv({ cls: "simple-image-slider__track" });
@@ -392,18 +391,78 @@ export default class SimpleImageSliderPlugin extends Plugin {
         "aria-live": "polite"
       }
     });
+    const statusButton = status.createEl("button", {
+      cls: "simple-image-slider__index-button",
+      attr: {
+        "aria-expanded": "false",
+        "aria-haspopup": "listbox",
+        type: "button"
+      }
+    });
+    const indexMenu = wrapper.createDiv({
+      cls: "simple-image-slider__index-menu simple-image-slider__index-menu--hidden",
+      attr: {
+        role: "listbox"
+      }
+    });
     const caption = wrapper.createDiv({
       cls: "simple-image-slider__caption"
     });
 
     let previousButton: HTMLButtonElement | null = null;
     let nextButton: HTMLButtonElement | null = null;
+    let isDocumentClickBound = false;
 
     const normalizeIndex = (index: number): number =>
       (index + slides.length) % slides.length;
 
     const rememberCurrentSlide = (): void => {
       onSlideChange(currentIndex, slides[currentIndex].path);
+    };
+
+    const menuLabelForSlide = (slide: ResolvedSlide): string =>
+      slide.caption || fileNameFromPath(slide.path);
+
+    const onDocumentClick = (): void => {
+      closeIndexMenu();
+    };
+
+    function closeIndexMenu(): void {
+      indexMenu.addClass("simple-image-slider__index-menu--hidden");
+      statusButton.setAttr("aria-expanded", "false");
+      if (isDocumentClickBound) {
+        document.removeEventListener("click", onDocumentClick);
+        isDocumentClickBound = false;
+      }
+    }
+
+    const openIndexMenu = (): void => {
+      indexMenu.removeClass("simple-image-slider__index-menu--hidden");
+      statusButton.setAttr("aria-expanded", "true");
+      if (!isDocumentClickBound) {
+        document.addEventListener("click", onDocumentClick);
+        isDocumentClickBound = true;
+      }
+    };
+
+    const toggleIndexMenu = (): void => {
+      if (indexMenu.hasClass("simple-image-slider__index-menu--hidden")) {
+        openIndexMenu();
+      } else {
+        closeIndexMenu();
+      }
+    };
+
+    const jumpToIndex = (index: number): void => {
+      if (isAnimating) {
+        return;
+      }
+
+      currentIndex = normalizeIndex(index);
+      rememberCurrentSlide();
+      update();
+      closeIndexMenu();
+      wrapper.focus();
     };
 
     const setTrackOffset = (offsetPx: number, animated: boolean): void => {
@@ -435,7 +494,18 @@ export default class SimpleImageSliderPlugin extends Plugin {
       caption.textContent = slide.caption;
       caption.toggleClass("simple-image-slider__caption--hidden", !slide.caption);
 
-      status.textContent = `${currentIndex + 1} / ${slides.length}`;
+      statusButton.textContent = `${currentIndex + 1} / ${slides.length}`;
+
+      const options = Array.from(
+        indexMenu.querySelectorAll<HTMLButtonElement>(
+          ".simple-image-slider__index-option"
+        )
+      );
+      for (const [index, option] of options.entries()) {
+        const isCurrent = index === currentIndex;
+        option.toggleClass("simple-image-slider__index-option--current", isCurrent);
+        option.setAttr("aria-selected", isCurrent ? "true" : "false");
+      }
     };
 
     const update = (): void => {
@@ -483,6 +553,7 @@ export default class SimpleImageSliderPlugin extends Plugin {
         return;
       }
 
+      closeIndexMenu();
       isAnimating = true;
       const frameWidth = frame.getBoundingClientRect().width;
       setTrackOffset(direction === 1 ? -frameWidth : frameWidth, true);
@@ -498,6 +569,39 @@ export default class SimpleImageSliderPlugin extends Plugin {
     };
 
     if (slides.length > 1) {
+      statusButton.addEventListener("click", (event: MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleIndexMenu();
+      });
+
+      indexMenu.addEventListener("click", (event: MouseEvent) => {
+        event.stopPropagation();
+      });
+
+      slides.forEach((slide, index) => {
+        const option = indexMenu.createEl("button", {
+          cls: "simple-image-slider__index-option",
+          attr: {
+            role: "option",
+            type: "button"
+          }
+        });
+        option.createSpan({
+          cls: "simple-image-slider__index-number",
+          text: String(index + 1)
+        });
+        option.createSpan({
+          cls: "simple-image-slider__index-label",
+          text: menuLabelForSlide(slide)
+        });
+        option.addEventListener("click", (event: MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
+          jumpToIndex(index);
+        });
+      });
+
       previousButton = frame.createEl("button", {
         cls: "simple-image-slider__button simple-image-slider__button--previous",
         attr: {
@@ -525,12 +629,20 @@ export default class SimpleImageSliderPlugin extends Plugin {
         return;
       }
 
-      if (event.key === "ArrowRight") {
+      if (event.key === "Escape") {
+        closeIndexMenu();
+      } else if (event.key === "ArrowRight") {
         event.preventDefault();
         slideWithAnimation(1);
       } else if (event.key === "ArrowLeft") {
         event.preventDefault();
         slideWithAnimation(-1);
+      }
+    });
+
+    this.register(() => {
+      if (isDocumentClickBound) {
+        document.removeEventListener("click", onDocumentClick);
       }
     });
 
