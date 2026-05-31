@@ -1,8 +1,19 @@
 # Simple Image Slider
 
-Simple Image Slider is a lightweight Obsidian plugin that renders a group of image embeds as a stable slider with captions. It can also show captions for ordinary image embeds.
+Simple Image Slider is a lightweight Obsidian plugin that renders a group of image embeds as a clean swipeable slider with captions. It can also show captions for ordinary image embeds.
 
 It is intentionally small. It supports Obsidian image wikilinks, click navigation, keyboard navigation, swipe/drag navigation, and captions. It does not include thumbnails, fullscreen mode, autoplay, video/audio/PDF support, annotations, compression, compare mode, or a settings panel.
+
+![Simple Image Slider example](docs/assets/example-slider.png)
+
+## Features
+
+- Render multiple Obsidian image embeds as one slider.
+- Swipe or drag horizontally to move between images.
+- Use left/right keyboard navigation when the slider has focus.
+- Keep captions below images so they do not cover image content.
+- Hide visual controls by default for a quiet article-style layout.
+- Add visible captions to ordinary captioned images without modifying note content.
 
 ## Usage
 
@@ -10,18 +21,19 @@ Add an `image-slider` code block to a note:
 
 ````markdown
 ```image-slider
-![[Pasted image 20260527081410.png|超大阳线突破前高]]
-![[Pasted image 20260527081714.png|继续上涨，而后回调也没有低于超大阳线收盘]]
-![[Pasted image 20260527081906.png|失败的情况：博通]]
+![[landscape-lake.jpg|Alpine lake at sunrise]]
+![[forest-river.jpg|River through evergreen forest]]
+![[red-rock-desert.jpg|Red rock desert trail]]
 ```
 ````
 
-Supported line forms:
+Supported slider line forms:
 
 ```markdown
 ![[image.png]]
 ![[image.png|caption]]
 ![[folder/image.png|caption]]
+![[folder/image.png | caption]]
 ```
 
 The text after `|` is displayed as a caption under the image. If a slide has no caption, no caption is shown.
@@ -38,8 +50,7 @@ For ordinary images, `|300` and `|300x200` are treated as Obsidian size aliases,
 ## Behavior
 
 - One image is shown at a time.
-- Previous and next buttons wrap around at the ends.
-- Left and right arrow keys work when the slider has focus.
+- Previous and next controls wrap around at the ends.
 - Horizontal swipe or drag changes slides.
 - Small accidental drag movement is ignored.
 - The image uses `object-fit: contain`.
@@ -78,15 +89,18 @@ npm run verify
 
 `npm run verify` runs parser/CSS tests and then builds the Obsidian plugin.
 
-## Acceptance Tests
+## Documentation
 
-The acceptance test plan is documented in:
+- [Acceptance tests](docs/specs/goal-and-acceptance-tests.md)
+- [Requirements spec](docs/specs/simple-image-slider-requirements.md)
 
-[docs/specs/goal-and-acceptance-tests.md](docs/specs/goal-and-acceptance-tests.md)
+## Demo Image Credits
 
-The requirements spec is documented in:
+The README demo uses landscape photos from Unsplash:
 
-[docs/specs/simple-image-slider-requirements.md](docs/specs/simple-image-slider-requirements.md)
+- [Lake photo](https://unsplash.com/photos/mountain-landscape-with-a-lake-at-sunrise-agaatGoOIlQ) by Cosmin Andrei Buzamat
+- [Forest river photo](https://unsplash.com/photos/fast-flowing-river-through-a-rocky-forest-landscape-sdWitIvtP0g) by Dennis Zhang
+- [Desert photo](https://unsplash.com/photos/desert-landscape-with-red-rock-formations-and-sparse-vegetation-SoLWkVvF7cU) by Dan Begel
 
 ## License
 
