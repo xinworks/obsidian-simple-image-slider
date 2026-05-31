@@ -1,7 +1,7 @@
 {
   "name": "obsidian-simple-image-slider",
   "version": "0.1.0",
-  "description": "A lightweight Obsidian image slider for wikilink image embeds with captions.",
+  "description": "A lightweight Obsidian image slider and caption renderer for image embeds.",
   "main": "main.js",
   "scripts": {
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",

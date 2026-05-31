@@ -1,6 +1,6 @@
 # Simple Image Slider
 
-Simple Image Slider is a lightweight Obsidian plugin that renders a group of image embeds as a stable slider with captions.
+Simple Image Slider is a lightweight Obsidian plugin that renders a group of image embeds as a stable slider with captions. It can also show captions for ordinary image embeds.
 
 It is intentionally small. It supports Obsidian image wikilinks, click navigation, keyboard navigation, swipe/drag navigation, and captions. It does not include thumbnails, fullscreen mode, autoplay, video/audio/PDF support, annotations, compression, compare mode, or a settings panel.
 
@@ -26,6 +26,15 @@ Supported line forms:
 
 The text after `|` is displayed as a caption under the image. If a slide has no caption, no caption is shown.
 
+Ordinary image captions are also supported:
+
+```markdown
+![[image.png|caption]]
+![caption](image.png)
+```
+
+For ordinary images, `|300` and `|300x200` are treated as Obsidian size aliases, not captions.
+
 ## Behavior
 
 - One image is shown at a time.
@@ -38,6 +47,7 @@ The text after `|` is displayed as a caption under the image. If a slide has no 
 - Hover effects do not resize, crop, scale, shift, or reflow the image area.
 - Missing or unsupported lines are skipped; valid images still render.
 - If no valid images are found, the block renders `No valid images found.`
+- Ordinary image captions are added during rendering and do not modify note content.
 
 ## Install Manually
 

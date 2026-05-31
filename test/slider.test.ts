@@ -5,6 +5,7 @@ import {
   fileNameFromPath,
   isSupportedImagePath,
   parseEmbedLine,
+  parseImageCaptionsFromSource,
   parseImageSliderSource
 } from "../src/slider.ts";
 
@@ -47,6 +48,23 @@ test("rejects unsupported line forms without throwing", () => {
   assert.equal(parseEmbedLine("![](image.png)"), null);
   assert.equal(parseEmbedLine("[[image.png]]"), null);
   assert.equal(parseEmbedLine("![[|caption only]]"), null);
+});
+
+test("parses captions for normal image embeds", () => {
+  assert.deepEqual(
+    parseImageCaptionsFromSource(`
+![[chart.png|breakout caption]]
+![[sized.png|300]]
+![markdown caption](chart-2.png)
+![image](chart-3.png "title")
+`),
+    [
+      { caption: "breakout caption" },
+      { caption: "" },
+      { caption: "markdown caption" },
+      { caption: "image" }
+    ]
+  );
 });
 
 test("keeps the documented image extension set complete", () => {

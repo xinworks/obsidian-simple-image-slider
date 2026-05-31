@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build a lightweight Obsidian plugin that turns a small block of Obsidian image embeds into a stable image slider. The slider must support click and swipe navigation, display each image's caption without covering the image, and avoid any hover behavior that changes image size or layout.
+Build a lightweight Obsidian plugin that turns a small block of Obsidian image embeds into a stable image slider. The slider must support click and swipe navigation, display each image's caption without covering the image, show captions for ordinary captioned images, and avoid any hover behavior that changes image size or layout.
 
 ## Test Scope
 
@@ -279,6 +279,25 @@ Expected result:
 - The valid image still renders.
 - The slider does not render thumbnails, fullscreen controls, autoplay controls, annotation controls, note panels, compression UI, or compare-mode UI.
 - The plugin works without configuring a settings panel.
+
+### AT-016 Ordinary Image Captions
+
+Test content:
+
+```markdown
+![[Pasted image 20260527081410.png|普通图片 caption]]
+
+![Markdown caption](Pasted image 20260527081714.png)
+
+![[Pasted image 20260527081906.png|300]]
+```
+
+Expected result:
+
+- The first ordinary wikilink image renders `普通图片 caption` below the image.
+- The standard Markdown image renders `Markdown caption` below the image.
+- The numeric Obsidian size alias `300` is not rendered as a caption.
+- The plugin does not modify the Markdown source.
 
 ## Completion Gate
 

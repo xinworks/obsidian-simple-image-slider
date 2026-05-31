@@ -1,8 +1,11 @@
 import { MarkdownPostProcessorContext, Plugin, setIcon, TFile } from "obsidian";
 import {
   fileNameFromPath,
+  isImageSizeAlias,
   isSupportedImagePath,
+  parseImageCaptionsFromSource,
   parseImageSliderSource,
+  ParsedImageCaption,
   ParsedSlideLine,
   ResolvedSlide
 } from "./src/slider";
@@ -25,12 +28,108 @@ interface ResolutionResult {
 
 export default class SimpleImageSliderPlugin extends Plugin {
   async onload(): Promise<void> {
+    this.registerMarkdownPostProcessor((el, ctx) => {
+      this.renderNormalImageCaptions(el, ctx);
+    });
+
     this.registerMarkdownCodeBlockProcessor(
       "image-slider",
       async (source, el, ctx) => {
         await this.renderImageSlider(source, el, ctx);
       }
     );
+  }
+
+  private renderNormalImageCaptions(
+    el: HTMLElement,
+    ctx: MarkdownPostProcessorContext
+  ): void {
+    if (el.hasClass("simple-image-slider") || el.find(".simple-image-slider")) {
+      return;
+    }
+
+    const section = ctx.getSectionInfo(el);
+    if (!section) {
+      return;
+    }
+
+    const parsedCaptions = parseImageCaptionsFromSource(section.text);
+    if (parsedCaptions.length === 0) {
+      return;
+    }
+
+    this.applyNormalImageCaptions(el, parsedCaptions);
+    window.setTimeout(() => this.applyNormalImageCaptions(el, parsedCaptions), 100);
+    window.setTimeout(() => this.applyNormalImageCaptions(el, parsedCaptions), 500);
+  }
+
+  private applyNormalImageCaptions(
+    el: HTMLElement,
+    parsedCaptions: ParsedImageCaption[]
+  ): void {
+    const images = Array.from(el.querySelectorAll("img")).filter((image) =>
+      this.shouldCaptionImage(image)
+    );
+    if (images.length === 0) {
+      return;
+    }
+
+    let captionIndex = 0;
+    for (const image of images) {
+      const parsed = parsedCaptions[captionIndex];
+      captionIndex += 1;
+      const caption = this.captionForImage(image, parsed);
+      if (!caption) {
+        continue;
+      }
+
+      this.wrapImageWithCaption(image, caption);
+    }
+  }
+
+  private captionForImage(
+    image: HTMLImageElement,
+    parsed?: ParsedImageCaption
+  ): string {
+    const renderedCaption =
+      image.getAttr("alt") ??
+      image.closest<HTMLElement>(".internal-embed.image-embed")?.getAttr("alt") ??
+      image.closest<HTMLElement>(".external-embed.image-embed")?.getAttr("alt") ??
+      "";
+    const caption = (renderedCaption || parsed?.caption || "").trim();
+
+    return caption && !isImageSizeAlias(caption) ? caption : "";
+  }
+
+  private shouldCaptionImage(image: HTMLImageElement): boolean {
+    return (
+      !image.hasClass("cm-widgetBuffer") &&
+      !image.closest(".simple-image-slider") &&
+      !image.closest(".simple-image-caption")
+    );
+  }
+
+  private wrapImageWithCaption(image: HTMLImageElement, caption: string): void {
+    const target =
+      image.closest<HTMLElement>(".internal-embed.image-embed") ??
+      image.closest<HTMLElement>(".external-embed.image-embed") ??
+      image.closest<HTMLElement>("a") ??
+      image;
+    const parent = target.parentElement;
+
+    if (!parent || target.closest(".simple-image-caption")) {
+      return;
+    }
+
+    const figure = parent.createEl("figure", {
+      cls: "simple-image-caption"
+    });
+    parent.insertBefore(figure, target);
+    figure.appendChild(target);
+    figure.createEl("figcaption", {
+      cls: "simple-image-caption__text",
+      text: caption
+    });
   }
 
   private async renderImageSlider(

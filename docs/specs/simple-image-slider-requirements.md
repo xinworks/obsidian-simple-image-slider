@@ -11,6 +11,7 @@ Inline image sequences in Obsidian notes take too much vertical space and interr
 ## Goals
 
 - Render multiple Obsidian image embeds as one slider.
+- Render visible captions for ordinary image embeds.
 - Support left/right navigation by button click.
 - Support horizontal swipe or drag navigation.
 - Display each image's caption without covering image content.
@@ -55,9 +56,19 @@ Supported line forms:
 
 Unsupported or unresolved lines should be skipped and reported as a compact inline warning inside the rendered block.
 
+The plugin also supports ordinary image captions outside slider blocks:
+
+```markdown
+![[image.png|caption]]
+![caption](image.png)
+```
+
+For ordinary images, numeric aliases such as `|300` and `|300x200` should be treated as Obsidian size aliases, not captions.
+
 ## Caption Behavior
 
 - The caption comes from the text after `|` in the Obsidian embed.
+- Ordinary images use the Obsidian embed alias or Markdown image alt text as the visible caption.
 - Captions display below the image, not as an overlay.
 - Desktop and mobile use the same caption layout.
 - Caption text should remain readable on light and dark themes.
@@ -116,6 +127,7 @@ Unsupported or unresolved lines should be skipped and reported as a compact inli
 ## Acceptance Criteria
 
 - A note containing an `image-slider` block renders one visible image with its caption below it.
+- A note containing a normal captioned image renders the visible caption below that image.
 - Clicking next and previous changes the visible image.
 - Swiping or dragging horizontally changes the visible image.
 - Captions match the corresponding image after navigation.

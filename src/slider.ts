@@ -27,6 +27,10 @@ export interface ParseResult {
   unsupportedLines: string[];
 }
 
+export interface ParsedImageCaption {
+  caption: string;
+}
+
 export function parseImageSliderSource(source: string): ParseResult {
   const slides: ParsedSlideLine[] = [];
   const unsupportedLines: string[] = [];
@@ -48,6 +52,24 @@ export function parseImageSliderSource(source: string): ParseResult {
   return { slides, unsupportedLines };
 }
 
+export function parseImageCaptionsFromSource(source: string): ParsedImageCaption[] {
+  const captions: ParsedImageCaption[] = [];
+  const imagePattern =
+    /!\[\[([^\]|]+?)(?:\|([^\]]*?))?\]\]|!\[([^\]]*?)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
+
+  for (const match of source.matchAll(imagePattern)) {
+    const wikilinkCaption = match[2]?.trim();
+    const markdownCaption = match[3]?.trim();
+    const caption = wikilinkCaption ?? markdownCaption ?? "";
+
+    captions.push({
+      caption: isImageSizeAlias(caption) ? "" : caption
+    });
+  }
+
+  return captions;
+}
+
 export function parseEmbedLine(line: string): ParsedSlideLine | null {
   const match = line.match(/^!\[\[([^\]|]+?)(?:\|([^\]]*?))?\]\]$/);
   if (!match) {
@@ -64,6 +86,10 @@ export function parseEmbedLine(line: string): ParsedSlideLine | null {
     path,
     caption: (match[2] ?? "").trim()
   };
+}
+
+export function isImageSizeAlias(alias: string): boolean {
+  return /^\d+(?:\s*x\s*\d+)?$/i.test(alias);
 }
 
 export function isSupportedImagePath(path: string): boolean {
