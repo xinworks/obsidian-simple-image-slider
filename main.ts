@@ -10,6 +10,14 @@ import {
 const DRAG_THRESHOLD_PX = 48;
 const TOUCH_INTENT_THRESHOLD_PX = 8;
 
+type SlideDirection = -1 | 1;
+
+interface SlideSlot {
+  element: HTMLDivElement;
+  image: HTMLImageElement;
+  offset: -1 | 0 | 1;
+}
+
 interface ResolutionResult {
   slides: ResolvedSlide[];
   skippedCount: number;
@@ -107,6 +115,8 @@ export default class SimpleImageSliderPlugin extends Plugin {
     let pointerStartY: number | null = null;
     let touchStartX: number | null = null;
     let touchStartY: number | null = null;
+    let isAnimating = false;
+    let transitionTimer: number | null = null;
 
     const wrapper = container.createDiv({ cls: "simple-image-slider" });
     wrapper.tabIndex = 0;
@@ -114,11 +124,17 @@ export default class SimpleImageSliderPlugin extends Plugin {
     wrapper.setAttr("aria-label", "Image slider");
 
     const frame = wrapper.createDiv({ cls: "simple-image-slider__frame" });
-    const image = frame.createEl("img", {
-      cls: "simple-image-slider__image",
-      attr: {
-        draggable: "false"
-      }
+    const track = frame.createDiv({ cls: "simple-image-slider__track" });
+    const slideSlots: SlideSlot[] = ([-1, 0, 1] as const).map((offset) => {
+      const element = track.createDiv({ cls: "simple-image-slider__slide" });
+      const image = element.createEl("img", {
+        cls: "simple-image-slider__image",
+        attr: {
+          draggable: "false"
+        }
+      });
+
+      return { element, image, offset };
     });
     const status = wrapper.createDiv({
       cls: "simple-image-slider__status",
@@ -133,11 +149,34 @@ export default class SimpleImageSliderPlugin extends Plugin {
     let previousButton: HTMLButtonElement | null = null;
     let nextButton: HTMLButtonElement | null = null;
 
-    const update = (): void => {
+    const normalizeIndex = (index: number): number =>
+      (index + slides.length) % slides.length;
+
+    const setTrackOffset = (offsetPx: number, animated: boolean): void => {
+      track.toggleClass("simple-image-slider__track--animated", animated);
+      track.style.transform =
+        offsetPx === 0
+          ? "translate3d(-100%, 0, 0)"
+          : `translate3d(calc(-100% + ${offsetPx}px), 0, 0)`;
+    };
+
+    const renderSlides = (): void => {
+      for (const slot of slideSlots) {
+        const slideIndex = normalizeIndex(currentIndex + slot.offset);
+        const slide = slides[slideIndex];
+        const isCurrent = slot.offset === 0;
+
+        slot.image.src = slide.resourcePath;
+        slot.image.alt = isCurrent ? slide.alt : "";
+        slot.image.setAttr("data-slide-path", slide.path);
+        slot.image.toggleClass("simple-image-slider__image--current", isCurrent);
+        slot.element.toggleClass("simple-image-slider__slide--current", isCurrent);
+        slot.element.setAttr("aria-hidden", isCurrent ? "false" : "true");
+      }
+    };
+
+    const updateCaptionAndStatus = (): void => {
       const slide = slides[currentIndex];
-      image.src = slide.resourcePath;
-      image.alt = slide.alt;
-      image.setAttr("data-slide-path", slide.path);
 
       caption.textContent = slide.caption;
       caption.toggleClass("simple-image-slider__caption--hidden", !slide.caption);
@@ -145,9 +184,62 @@ export default class SimpleImageSliderPlugin extends Plugin {
       status.textContent = `${currentIndex + 1} / ${slides.length}`;
     };
 
-    const showSlide = (index: number): void => {
-      currentIndex = (index + slides.length) % slides.length;
-      update();
+    const update = (): void => {
+      renderSlides();
+      updateCaptionAndStatus();
+      setTrackOffset(0, false);
+    };
+
+    const onTrackTransitionEnd = (onDone: () => void): void => {
+      let isDone = false;
+
+      const finish = (): void => {
+        if (isDone) {
+          return;
+        }
+
+        isDone = true;
+        if (transitionTimer !== null) {
+          window.clearTimeout(transitionTimer);
+          transitionTimer = null;
+        }
+        track.removeEventListener("transitionend", finish);
+        onDone();
+      };
+
+      track.addEventListener("transitionend", finish);
+      transitionTimer = window.setTimeout(finish, 360);
+    };
+
+    const animateToCurrent = (): void => {
+      if (isAnimating) {
+        return;
+      }
+
+      isAnimating = true;
+      setTrackOffset(0, true);
+      onTrackTransitionEnd(() => {
+        setTrackOffset(0, false);
+        isAnimating = false;
+      });
+    };
+
+    const slideWithAnimation = (direction: SlideDirection): void => {
+      if (slides.length <= 1 || isAnimating) {
+        return;
+      }
+
+      isAnimating = true;
+      const frameWidth = frame.getBoundingClientRect().width;
+      setTrackOffset(direction === 1 ? -frameWidth : frameWidth, true);
+
+      onTrackTransitionEnd(() => {
+        currentIndex = normalizeIndex(currentIndex + direction);
+        renderSlides();
+        updateCaptionAndStatus();
+        setTrackOffset(0, false);
+        isAnimating = false;
+      });
     };
 
     if (slides.length > 1) {
@@ -169,8 +261,8 @@ export default class SimpleImageSliderPlugin extends Plugin {
       });
       setIcon(nextButton, "chevron-right");
 
-      this.bindNavigationButton(previousButton, () => showSlide(currentIndex - 1));
-      this.bindNavigationButton(nextButton, () => showSlide(currentIndex + 1));
+      this.bindNavigationButton(previousButton, () => slideWithAnimation(-1));
+      this.bindNavigationButton(nextButton, () => slideWithAnimation(1));
     }
 
     wrapper.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -180,22 +272,23 @@ export default class SimpleImageSliderPlugin extends Plugin {
 
       if (event.key === "ArrowRight") {
         event.preventDefault();
-        showSlide(currentIndex + 1);
+        slideWithAnimation(1);
       } else if (event.key === "ArrowLeft") {
         event.preventDefault();
-        showSlide(currentIndex - 1);
+        slideWithAnimation(-1);
       }
     });
 
-    const navigateFromDelta = (deltaX: number, deltaY: number): void => {
+    const navigateFromDelta = (deltaX: number, deltaY: number): boolean => {
       if (
         Math.abs(deltaX) < DRAG_THRESHOLD_PX ||
         Math.abs(deltaX) < Math.abs(deltaY)
       ) {
-        return;
+        return false;
       }
 
-      showSlide(deltaX < 0 ? currentIndex + 1 : currentIndex - 1);
+      slideWithAnimation(deltaX < 0 ? 1 : -1);
+      return true;
     };
 
     const isHorizontalTouchIntent = (deltaX: number, deltaY: number): boolean =>
@@ -203,10 +296,11 @@ export default class SimpleImageSliderPlugin extends Plugin {
       Math.abs(deltaX) > Math.abs(deltaY);
 
     frame.addEventListener("pointerdown", (event: PointerEvent) => {
-      if (slides.length <= 1 || event.pointerType === "touch") {
+      if (slides.length <= 1 || event.pointerType === "touch" || isAnimating) {
         return;
       }
 
+      track.toggleClass("simple-image-slider__track--animated", false);
       pointerStartX = event.clientX;
       pointerStartY = event.clientY;
       try {
@@ -216,12 +310,33 @@ export default class SimpleImageSliderPlugin extends Plugin {
       }
     });
 
+    frame.addEventListener("pointermove", (event: PointerEvent) => {
+      if (
+        slides.length <= 1 ||
+        event.pointerType === "touch" ||
+        pointerStartX === null ||
+        pointerStartY === null ||
+        isAnimating
+      ) {
+        return;
+      }
+
+      const deltaX = event.clientX - pointerStartX;
+      const deltaY = event.clientY - pointerStartY;
+
+      if (isHorizontalTouchIntent(deltaX, deltaY)) {
+        event.preventDefault();
+        setTrackOffset(deltaX, false);
+      }
+    });
+
     frame.addEventListener("pointerup", (event: PointerEvent) => {
       if (
         slides.length <= 1 ||
         event.pointerType === "touch" ||
         pointerStartX === null ||
-        pointerStartY === null
+        pointerStartY === null ||
+        isAnimating
       ) {
         return;
       }
@@ -231,22 +346,28 @@ export default class SimpleImageSliderPlugin extends Plugin {
       pointerStartX = null;
       pointerStartY = null;
 
-      navigateFromDelta(deltaX, deltaY);
+      if (!navigateFromDelta(deltaX, deltaY)) {
+        animateToCurrent();
+      }
     });
 
     frame.addEventListener("pointercancel", () => {
       pointerStartX = null;
       pointerStartY = null;
+      if (!isAnimating) {
+        animateToCurrent();
+      }
     });
 
     frame.addEventListener(
       "touchstart",
       (event: TouchEvent) => {
-        if (slides.length <= 1 || event.touches.length !== 1) {
+        if (slides.length <= 1 || event.touches.length !== 1 || isAnimating) {
           return;
         }
 
         event.stopPropagation();
+        track.toggleClass("simple-image-slider__track--animated", false);
         const touch = event.touches[0];
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
@@ -261,7 +382,8 @@ export default class SimpleImageSliderPlugin extends Plugin {
           slides.length <= 1 ||
           touchStartX === null ||
           touchStartY === null ||
-          event.touches.length !== 1
+          event.touches.length !== 1 ||
+          isAnimating
         ) {
           return;
         }
@@ -273,6 +395,7 @@ export default class SimpleImageSliderPlugin extends Plugin {
         if (isHorizontalTouchIntent(deltaX, deltaY)) {
           event.preventDefault();
           event.stopPropagation();
+          setTrackOffset(deltaX, false);
         }
       },
       { passive: false }
@@ -285,7 +408,8 @@ export default class SimpleImageSliderPlugin extends Plugin {
           slides.length <= 1 ||
           touchStartX === null ||
           touchStartY === null ||
-          event.changedTouches.length !== 1
+          event.changedTouches.length !== 1 ||
+          isAnimating
         ) {
           return;
         }
@@ -304,6 +428,8 @@ export default class SimpleImageSliderPlugin extends Plugin {
           event.preventDefault();
           event.stopPropagation();
           navigateFromDelta(deltaX, deltaY);
+        } else {
+          animateToCurrent();
         }
       },
       { passive: false }
@@ -312,6 +438,9 @@ export default class SimpleImageSliderPlugin extends Plugin {
     frame.addEventListener("touchcancel", () => {
       touchStartX = null;
       touchStartY = null;
+      if (!isAnimating) {
+        animateToCurrent();
+      }
     });
 
     if (skippedCount > 0) {
