@@ -119,14 +119,14 @@ export default class SimpleImageSliderPlugin extends Plugin {
         draggable: "false"
       }
     });
-    const caption = frame.createDiv({
-      cls: "simple-image-slider__caption"
-    });
     const status = wrapper.createDiv({
       cls: "simple-image-slider__status",
       attr: {
         "aria-live": "polite"
       }
+    });
+    const caption = wrapper.createDiv({
+      cls: "simple-image-slider__caption"
     });
 
     let previousButton: HTMLButtonElement | null = null;
@@ -198,7 +198,7 @@ export default class SimpleImageSliderPlugin extends Plugin {
     };
 
     frame.addEventListener("pointerdown", (event: PointerEvent) => {
-      if (slides.length <= 1) {
+      if (slides.length <= 1 || event.pointerType === "touch") {
         return;
       }
 
@@ -214,6 +214,7 @@ export default class SimpleImageSliderPlugin extends Plugin {
     frame.addEventListener("pointerup", (event: PointerEvent) => {
       if (
         slides.length <= 1 ||
+        event.pointerType === "touch" ||
         pointerStartX === null ||
         pointerStartY === null
       ) {

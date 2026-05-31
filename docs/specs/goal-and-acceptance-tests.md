@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build a lightweight Obsidian plugin that turns a small block of Obsidian image embeds into a stable image slider. The slider must support click and swipe navigation, display each image's caption as an overlay, and avoid any hover behavior that changes image size or layout.
+Build a lightweight Obsidian plugin that turns a small block of Obsidian image embeds into a stable image slider. The slider must support click and swipe navigation, display each image's caption without covering the image, and avoid any hover behavior that changes image size or layout.
 
 ## Test Scope
 
@@ -46,7 +46,7 @@ Expected result:
 - The first image is visible by default.
 - The rendered block does not modify the Markdown source.
 
-### AT-002 Caption Overlay
+### AT-002 Caption
 
 Steps:
 
@@ -57,7 +57,7 @@ Steps:
 Expected result:
 
 - Each slide displays the caption from the text after `|` in the corresponding embed.
-- The caption appears over the image, not as a separate paragraph above or below the slider.
+- The caption appears below the image and does not cover chart content.
 - The caption remains readable in the current Obsidian theme.
 - Captions update correctly when the visible image changes.
 
@@ -121,7 +121,7 @@ Expected result:
 - The image width and height do not change on hover.
 - The slider width and height do not change on hover.
 - Surrounding note content does not shift on hover.
-- Hover effects are limited to opacity, color, or visibility of overlay elements.
+- Hover effects are limited to opacity, color, or visibility of controls.
 - No crop, zoom, scale, border-width change, padding change, or layout reflow is introduced by hover.
 
 ### AT-007 Keyboard Navigation
@@ -153,7 +153,7 @@ Test content:
 
 Expected result:
 
-- The single image renders with its caption overlay.
+- The single image renders with its caption below the image.
 - Previous and next controls are hidden or disabled.
 - No broken, empty, or misleading controls are shown.
 - Keyboard or swipe input does not cause errors.
@@ -237,7 +237,7 @@ Test content:
 
 Expected result:
 
-- A line without caption renders as a slide without caption overlay.
+- A line without caption renders as a slide without a caption.
 - A line with `|caption` renders with that caption.
 - A line with a folder path resolves relative to the current note through Obsidian link resolution.
 - Valid image extensions are accepted: `png`, `jpg`, `jpeg`, `gif`, `webp`, `svg`, `bmp`, `avif`.

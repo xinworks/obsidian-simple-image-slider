@@ -2,7 +2,7 @@
 
 ## Summary
 
-Build a lightweight Obsidian community plugin that renders a small image slider from a Markdown code block. The plugin is intended for notes that contain multiple related chart screenshots or pasted images. It should reduce vertical clutter while keeping each image's short description visible as a caption on the image.
+Build a lightweight Obsidian community plugin that renders a small image slider from a Markdown code block. The plugin is intended for notes that contain multiple related chart screenshots or pasted images. It should reduce vertical clutter while keeping each image's short description visible as a caption below the image.
 
 ## Problem
 
@@ -13,7 +13,7 @@ Inline image sequences in Obsidian notes take too much vertical space and interr
 - Render multiple Obsidian image embeds as one slider.
 - Support left/right navigation by button click.
 - Support horizontal swipe or drag navigation.
-- Display each image's caption on top of the image.
+- Display each image's caption without covering image content.
 - Keep the authoring syntax close to normal Obsidian image embeds.
 - Work in Obsidian reading mode and live preview rendered blocks.
 - Keep implementation small, predictable, and easy to maintain.
@@ -58,11 +58,11 @@ Unsupported or unresolved lines should be skipped and reported as a compact inli
 ## Caption Behavior
 
 - The caption comes from the text after `|` in the Obsidian embed.
-- Captions display as an overlay on the image.
-- Default caption position: bottom overlay.
+- Captions display below the image, not as an overlay.
+- Desktop and mobile use the same caption layout.
 - Caption text should remain readable on light and dark themes.
-- Long captions may wrap to multiple lines, but should not cover more than roughly 30% of the image height.
-- If no caption is provided, no caption overlay is shown.
+- Long captions may wrap to multiple lines without covering image content.
+- If no caption is provided, no caption is shown.
 
 ## Slider Behavior
 
@@ -85,6 +85,7 @@ Unsupported or unresolved lines should be skipped and reported as a compact inli
 - Use Obsidian's vault resource path for local images.
 - Do not search the whole vault by filename unless Obsidian's link resolver cannot resolve the path.
 - Images should fit within the slider without cropping by default.
+- The stable image canvas should prioritize filling available width and leave vertical whitespace before creating large left/right gutters.
 - Use `object-fit: contain`.
 
 ## Visual Requirements
@@ -94,7 +95,7 @@ Unsupported or unresolved lines should be skipped and reported as a compact inli
 - Controls should be visible but unobtrusive.
 - Controls should work on desktop and mobile.
 - Hovering over the image must not change the image size, slider size, or surrounding layout.
-- Hover effects may only change opacity, color, or visibility of overlay controls/caption.
+- Hover effects may only change opacity, color, or visibility of controls.
 - The slider should not require custom snippets or theme-specific CSS.
 - CSS class names should be plugin-scoped to avoid affecting normal note images.
 
@@ -114,7 +115,7 @@ Unsupported or unresolved lines should be skipped and reported as a compact inli
 
 ## Acceptance Criteria
 
-- A note containing an `image-slider` block renders one visible image with its caption overlay.
+- A note containing an `image-slider` block renders one visible image with its caption below it.
 - Clicking next and previous changes the visible image.
 - Swiping or dragging horizontally changes the visible image.
 - Captions match the corresponding image after navigation.
@@ -160,7 +161,7 @@ The current Media Slider trial block can be converted to:
 
 ## Open Questions
 
-- Should the caption overlay be fixed at the top instead of bottom?
+- Should caption placement become configurable later?
 - Should navigation wrap around, or stop at the ends?
 - Should the slider height be automatic, fixed, or configurable inline later?
 - Should normal Markdown image syntax `![caption](path.png)` be supported in a later version?
