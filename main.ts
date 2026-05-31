@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext, Plugin, TFile } from "obsidian";
+import { MarkdownPostProcessorContext, Plugin, setIcon, TFile } from "obsidian";
 import {
   fileNameFromPath,
   isSupportedImagePath,
@@ -150,20 +150,21 @@ export default class SimpleImageSliderPlugin extends Plugin {
     if (slides.length > 1) {
       previousButton = frame.createEl("button", {
         cls: "simple-image-slider__button simple-image-slider__button--previous",
-        text: "‹",
         attr: {
           "aria-label": "Previous image",
           type: "button"
         }
       });
+      setIcon(previousButton, "chevron-left");
+
       nextButton = frame.createEl("button", {
         cls: "simple-image-slider__button simple-image-slider__button--next",
-        text: "›",
         attr: {
           "aria-label": "Next image",
           type: "button"
         }
       });
+      setIcon(nextButton, "chevron-right");
 
       this.bindNavigationButton(previousButton, () => showSlide(currentIndex - 1));
       this.bindNavigationButton(nextButton, () => showSlide(currentIndex + 1));

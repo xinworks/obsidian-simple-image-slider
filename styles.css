@@ -1,9 +1,9 @@
 .simple-image-slider {
-  --sis-control-bg: rgba(255, 255, 255, 0.78);
-  --sis-control-bg-hover: rgba(255, 255, 255, 0.94);
-  --sis-control-border: rgba(0, 0, 0, 0.1);
-  --sis-control-fg: rgba(23, 23, 23, 0.76);
-  --sis-caption-bg: rgba(22, 22, 22, 0.68);
+  --sis-control-bg: rgba(255, 255, 255, 0.58);
+  --sis-control-bg-hover: rgba(255, 255, 255, 0.86);
+  --sis-control-border: rgba(0, 0, 0, 0.08);
+  --sis-control-fg: rgba(23, 23, 23, 0.68);
+  --sis-caption-bg: rgba(22, 22, 22, 0.42);
   --sis-caption-fg: #ffffff;
   --sis-chip-bg: rgba(255, 255, 255, 0.76);
   --sis-chip-fg: rgba(23, 23, 23, 0.62);
@@ -55,7 +55,7 @@
 .simple-image-slider__caption {
   background: var(--sis-caption-bg);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
   box-sizing: border-box;
   color: var(--sis-caption-fg);
@@ -73,7 +73,7 @@
   position: absolute;
   right: auto;
   text-align: left;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.44);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
   top: 0;
   z-index: 2;
 }
@@ -86,24 +86,29 @@
   align-items: center;
   background: var(--sis-control-bg);
   border: 1px solid var(--sis-control-border);
-  border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   color: var(--sis-control-fg);
   cursor: pointer;
   display: flex;
-  font-size: 23px;
-  height: 36px;
+  height: 56px;
   justify-content: center;
   line-height: 1;
-  opacity: 0.9;
+  opacity: 0.82;
   padding: 0;
   pointer-events: auto;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   transition: background-color 120ms ease, color 120ms ease, opacity 120ms ease, box-shadow 120ms ease;
-  width: 36px;
+  width: 28px;
   z-index: 3;
+}
+
+.simple-image-slider__button svg {
+  height: 18px;
+  stroke-width: 2.25;
+  width: 18px;
 }
 
 .simple-image-slider__button:hover,
@@ -111,15 +116,15 @@
   background: var(--sis-control-bg-hover);
   color: var(--sis-control-fg);
   opacity: 1;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
 .simple-image-slider__button--previous {
-  left: 10px;
+  left: 8px;
 }
 
 .simple-image-slider__button--next {
-  right: 10px;
+  right: 8px;
 }
 
 .simple-image-slider__status {
