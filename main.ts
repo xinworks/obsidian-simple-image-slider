@@ -27,10 +27,55 @@ interface ResolutionResult {
 }
 
 export default class SimpleImageSliderPlugin extends Plugin {
+  private normalCaptionRenderTimer: number | null = null;
+
   async onload(): Promise<void> {
     this.registerMarkdownPostProcessor((el, ctx) => {
       this.renderNormalImageCaptions(el, ctx);
     });
+
+    const normalImageObserver = new MutationObserver((mutations) => {
+      if (
+        mutations.some((mutation) =>
+          mutation.type === "attributes" ||
+          Array.from(mutation.addedNodes).some(
+            (node) =>
+              node instanceof HTMLImageElement ||
+              (node instanceof HTMLElement && !!node.querySelector("img"))
+          )
+        )
+      ) {
+        this.scheduleNormalImageCaptionRender();
+      }
+    });
+
+    normalImageObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["alt", "class", "src"]
+    });
+    this.register(() => normalImageObserver.disconnect());
+
+    const scheduleNormalCaptionRender = (): void => {
+      this.scheduleNormalImageCaptionRender();
+    };
+    document.addEventListener("scroll", scheduleNormalCaptionRender, true);
+    this.register(() => {
+      document.removeEventListener("scroll", scheduleNormalCaptionRender, true);
+    });
+
+    this.registerEvent(
+      this.app.workspace.on("active-leaf-change", () => {
+        this.scheduleNormalImageCaptionRender();
+      })
+    );
+    this.registerEvent(
+      this.app.workspace.on("file-open", () => {
+        this.scheduleNormalImageCaptionRender();
+      })
+    );
+    this.app.workspace.onLayoutReady(() => this.scheduleNormalImageCaptionRender());
 
     this.registerMarkdownCodeBlockProcessor(
       "image-slider",
@@ -38,6 +83,25 @@ export default class SimpleImageSliderPlugin extends Plugin {
         await this.renderImageSlider(source, el, ctx);
       }
     );
+  }
+
+  private scheduleNormalImageCaptionRender(): void {
+    if (this.normalCaptionRenderTimer !== null) {
+      window.clearTimeout(this.normalCaptionRenderTimer);
+    }
+
+    this.normalCaptionRenderTimer = window.setTimeout(() => {
+      this.normalCaptionRenderTimer = null;
+      const markdownRoots = Array.from(
+        document.body.querySelectorAll<HTMLElement>(
+          ".markdown-preview-view, .markdown-source-view"
+        )
+      );
+
+      for (const root of markdownRoots) {
+        this.applyNormalImageCaptions(root, []);
+      }
+    }, 120);
   }
 
   private renderNormalImageCaptions(
@@ -83,7 +147,7 @@ export default class SimpleImageSliderPlugin extends Plugin {
         continue;
       }
 
-      this.wrapImageWithCaption(image, caption);
+      this.applyCaptionToImage(image, caption);
     }
   }
 
@@ -98,7 +162,31 @@ export default class SimpleImageSliderPlugin extends Plugin {
       "";
     const caption = (renderedCaption || parsed?.caption || "").trim();
 
-    return caption && !isImageSizeAlias(caption) ? caption : "";
+    if (!caption || isImageSizeAlias(caption)) {
+      return "";
+    }
+
+    return caption === this.fileNameForRenderedImage(image) ? "" : caption;
+  }
+
+  private fileNameForRenderedImage(image: HTMLImageElement): string {
+    const source =
+      image.closest<HTMLElement>(".internal-embed.image-embed")?.getAttr("src") ??
+      image.closest<HTMLElement>(".external-embed.image-embed")?.getAttr("src") ??
+      image.getAttr("src") ??
+      "";
+    const cleanSource = source.split("?")[0]?.split("#")[0] ?? source;
+    let decoded = cleanSource;
+
+    try {
+      decoded = decodeURIComponent(cleanSource);
+    } catch {
+      decoded = cleanSource;
+    }
+
+    const segments = decoded.split(/[\\/]/);
+
+    return segments[segments.length - 1]?.trim() ?? "";
   }
 
   private shouldCaptionImage(image: HTMLImageElement): boolean {
@@ -109,27 +197,16 @@ export default class SimpleImageSliderPlugin extends Plugin {
     );
   }
 
-  private wrapImageWithCaption(image: HTMLImageElement, caption: string): void {
+  private applyCaptionToImage(image: HTMLImageElement, caption: string): void {
     const target =
       image.closest<HTMLElement>(".internal-embed.image-embed") ??
       image.closest<HTMLElement>(".external-embed.image-embed") ??
       image.closest<HTMLElement>("a") ??
+      image.parentElement ??
       image;
-    const parent = target.parentElement;
 
-    if (!parent || target.closest(".simple-image-caption")) {
-      return;
-    }
-
-    const figure = parent.createEl("figure", {
-      cls: "simple-image-caption"
-    });
-    parent.insertBefore(figure, target);
-    figure.appendChild(target);
-    figure.createEl("figcaption", {
-      cls: "simple-image-caption__text",
-      text: caption
-    });
+    target.addClass("simple-image-caption");
+    target.setAttr("data-simple-image-caption", caption);
   }
 
   private async renderImageSlider(

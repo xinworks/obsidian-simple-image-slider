@@ -176,9 +176,25 @@ button.simple-image-slider__button--next {
   text-align: center;
 }
 
-.simple-image-caption > .internal-embed,
-.simple-image-caption > .external-embed,
-.simple-image-caption > a,
+.simple-image-caption::after {
+  color: var(--text-muted);
+  content: attr(data-simple-image-caption);
+  display: block;
+  font-size: 0.78em;
+  font-weight: 450;
+  letter-spacing: 0;
+  line-height: 1.45;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+  padding: 0 6px;
+  text-align: center;
+}
+
+.simple-image-caption[data-simple-image-caption=""]::after {
+  display: none;
+}
+
+.simple-image-caption > .image-wrapper,
 .simple-image-caption > img {
   display: inline-block;
   max-width: 100%;
@@ -188,16 +204,4 @@ button.simple-image-slider__button--next {
   display: block;
   height: auto;
   max-width: 100%;
-}
-
-.simple-image-caption__text {
-  color: var(--text-muted);
-  font-size: 0.78em;
-  font-weight: 450;
-  letter-spacing: 0;
-  line-height: 1.45;
-  margin-top: 6px;
-  overflow-wrap: anywhere;
-  padding: 0 6px;
-  text-align: center;
 }

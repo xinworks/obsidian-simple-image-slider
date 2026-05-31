@@ -13,10 +13,11 @@ test("parses Obsidian image embeds and captions", () => {
   const result = parseImageSliderSource(`
 ![[image.png]]
 ![[folder/chart.jpg|caption text]]
+![[folder/spaced chart.jpg | spaced caption]]
 not supported
 `);
 
-  assert.equal(result.slides.length, 2);
+  assert.equal(result.slides.length, 3);
   assert.deepEqual(result.slides[0], {
     original: "![[image.png]]",
     path: "image.png",
@@ -26,6 +27,11 @@ not supported
     original: "![[folder/chart.jpg|caption text]]",
     path: "folder/chart.jpg",
     caption: "caption text"
+  });
+  assert.deepEqual(result.slides[2], {
+    original: "![[folder/spaced chart.jpg | spaced caption]]",
+    path: "folder/spaced chart.jpg",
+    caption: "spaced caption"
   });
   assert.deepEqual(result.unsupportedLines, ["not supported"]);
 });
@@ -54,12 +60,16 @@ test("parses captions for normal image embeds", () => {
   assert.deepEqual(
     parseImageCaptionsFromSource(`
 ![[chart.png|breakout caption]]
+![[spaced.png | spaced caption]]
 ![[sized.png|300]]
+![[sized-spaced.png | 300x200]]
 ![markdown caption](chart-2.png)
 ![image](chart-3.png "title")
 `),
     [
       { caption: "breakout caption" },
+      { caption: "spaced caption" },
+      { caption: "" },
       { caption: "" },
       { caption: "markdown caption" },
       { caption: "image" }
