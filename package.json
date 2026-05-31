@@ -1,7 +1,7 @@
 {
   "name": "obsidian-simple-image-slider",
-  "version": "0.1.1",
-  "description": "A lightweight Obsidian image slider and caption renderer for image embeds.",
+  "version": "0.1.2",
+  "description": "A lightweight image slider and caption renderer for image embeds.",
   "main": "main.js",
   "scripts": {
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
@@ -19,7 +19,6 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^24.10.1",
-    "builtin-modules": "^5.0.0",
     "esbuild": "^0.27.0",
     "obsidian": "^1.10.3",
     "tslib": "^2.8.1",

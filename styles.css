@@ -98,9 +98,9 @@ button.simple-image-slider__button {
   align-items: center;
   -webkit-appearance: none;
   appearance: none;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
   color: var(--sis-control-fg);
   cursor: pointer;
   display: flex;
@@ -132,7 +132,7 @@ button.simple-image-slider__button svg {
 
 button.simple-image-slider__button:hover,
 button.simple-image-slider__button:focus-visible {
-  background: transparent !important;
+  background: transparent;
   color: var(--sis-control-fg-hover);
   opacity: 0.58;
 }
