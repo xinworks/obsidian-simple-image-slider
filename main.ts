@@ -8,6 +8,7 @@ import {
 } from "./src/slider";
 
 const DRAG_THRESHOLD_PX = 48;
+const TOUCH_INTENT_THRESHOLD_PX = 8;
 
 interface ResolutionResult {
   slides: ResolvedSlide[];
@@ -197,6 +198,10 @@ export default class SimpleImageSliderPlugin extends Plugin {
       showSlide(deltaX < 0 ? currentIndex + 1 : currentIndex - 1);
     };
 
+    const isHorizontalTouchIntent = (deltaX: number, deltaY: number): boolean =>
+      Math.abs(deltaX) >= TOUCH_INTENT_THRESHOLD_PX &&
+      Math.abs(deltaX) > Math.abs(deltaY);
+
     frame.addEventListener("pointerdown", (event: PointerEvent) => {
       if (slides.length <= 1 || event.pointerType === "touch") {
         return;
@@ -241,11 +246,36 @@ export default class SimpleImageSliderPlugin extends Plugin {
           return;
         }
 
+        event.stopPropagation();
         const touch = event.touches[0];
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
       },
-      { passive: true }
+      { passive: false }
+    );
+
+    frame.addEventListener(
+      "touchmove",
+      (event: TouchEvent) => {
+        if (
+          slides.length <= 1 ||
+          touchStartX === null ||
+          touchStartY === null ||
+          event.touches.length !== 1
+        ) {
+          return;
+        }
+
+        const touch = event.touches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+
+        if (isHorizontalTouchIntent(deltaX, deltaY)) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      },
+      { passive: false }
     );
 
     frame.addEventListener(
@@ -260,6 +290,7 @@ export default class SimpleImageSliderPlugin extends Plugin {
           return;
         }
 
+        event.stopPropagation();
         const touch = event.changedTouches[0];
         const deltaX = touch.clientX - touchStartX;
         const deltaY = touch.clientY - touchStartY;
@@ -271,6 +302,7 @@ export default class SimpleImageSliderPlugin extends Plugin {
           Math.abs(deltaX) >= Math.abs(deltaY)
         ) {
           event.preventDefault();
+          event.stopPropagation();
           navigateFromDelta(deltaX, deltaY);
         }
       },

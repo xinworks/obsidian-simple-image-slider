@@ -33,6 +33,7 @@
   justify-content: center;
   max-height: min(78vh, 680px);
   min-height: 220px;
+  overscroll-behavior-x: contain;
   overflow: hidden;
   position: relative;
   touch-action: pan-y;
