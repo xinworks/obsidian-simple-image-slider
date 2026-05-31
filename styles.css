@@ -127,6 +127,26 @@ button.simple-image-slider__button--next {
   right: 6px;
 }
 
+@media (pointer: coarse) {
+  button.simple-image-slider__button {
+    height: 64px;
+    width: 56px;
+  }
+
+  button.simple-image-slider__button svg {
+    height: 24px;
+    width: 24px;
+  }
+
+  button.simple-image-slider__button--previous {
+    left: 0;
+  }
+
+  button.simple-image-slider__button--next {
+    right: 0;
+  }
+}
+
 .simple-image-slider__status {
   background: var(--sis-chip-bg);
   backdrop-filter: blur(10px);

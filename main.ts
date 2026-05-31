@@ -104,6 +104,8 @@ export default class SimpleImageSliderPlugin extends Plugin {
     let currentIndex = 0;
     let pointerStartX: number | null = null;
     let pointerStartY: number | null = null;
+    let touchStartX: number | null = null;
+    let touchStartY: number | null = null;
 
     const wrapper = container.createDiv({ cls: "simple-image-slider" });
     wrapper.tabIndex = 0;
@@ -184,6 +186,17 @@ export default class SimpleImageSliderPlugin extends Plugin {
       }
     });
 
+    const navigateFromDelta = (deltaX: number, deltaY: number): void => {
+      if (
+        Math.abs(deltaX) < DRAG_THRESHOLD_PX ||
+        Math.abs(deltaX) < Math.abs(deltaY)
+      ) {
+        return;
+      }
+
+      showSlide(deltaX < 0 ? currentIndex + 1 : currentIndex - 1);
+    };
+
     frame.addEventListener("pointerdown", (event: PointerEvent) => {
       if (slides.length <= 1) {
         return;
@@ -191,7 +204,11 @@ export default class SimpleImageSliderPlugin extends Plugin {
 
       pointerStartX = event.clientX;
       pointerStartY = event.clientY;
-      frame.setPointerCapture(event.pointerId);
+      try {
+        frame.setPointerCapture(event.pointerId);
+      } catch {
+        // Some mobile WebViews expose pointer events without capture support.
+      }
     });
 
     frame.addEventListener("pointerup", (event: PointerEvent) => {
@@ -208,19 +225,60 @@ export default class SimpleImageSliderPlugin extends Plugin {
       pointerStartX = null;
       pointerStartY = null;
 
-      if (
-        Math.abs(deltaX) < DRAG_THRESHOLD_PX ||
-        Math.abs(deltaX) < Math.abs(deltaY)
-      ) {
-        return;
-      }
-
-      showSlide(deltaX < 0 ? currentIndex + 1 : currentIndex - 1);
+      navigateFromDelta(deltaX, deltaY);
     });
 
     frame.addEventListener("pointercancel", () => {
       pointerStartX = null;
       pointerStartY = null;
+    });
+
+    frame.addEventListener(
+      "touchstart",
+      (event: TouchEvent) => {
+        if (slides.length <= 1 || event.touches.length !== 1) {
+          return;
+        }
+
+        const touch = event.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+      },
+      { passive: true }
+    );
+
+    frame.addEventListener(
+      "touchend",
+      (event: TouchEvent) => {
+        if (
+          slides.length <= 1 ||
+          touchStartX === null ||
+          touchStartY === null ||
+          event.changedTouches.length !== 1
+        ) {
+          return;
+        }
+
+        const touch = event.changedTouches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+        touchStartX = null;
+        touchStartY = null;
+
+        if (
+          Math.abs(deltaX) >= DRAG_THRESHOLD_PX &&
+          Math.abs(deltaX) >= Math.abs(deltaY)
+        ) {
+          event.preventDefault();
+          navigateFromDelta(deltaX, deltaY);
+        }
+      },
+      { passive: false }
+    );
+
+    frame.addEventListener("touchcancel", () => {
+      touchStartX = null;
+      touchStartY = null;
     });
 
     if (skippedCount > 0) {
@@ -238,6 +296,8 @@ export default class SimpleImageSliderPlugin extends Plugin {
     button: HTMLButtonElement,
     onNavigate: () => void
   ): void {
+    let lastTouchNavigation = 0;
+
     button.addEventListener("pointerdown", (event: PointerEvent) => {
       event.preventDefault();
       event.stopPropagation();
@@ -248,9 +308,32 @@ export default class SimpleImageSliderPlugin extends Plugin {
       event.stopPropagation();
     });
 
+    button.addEventListener(
+      "touchstart",
+      (event: TouchEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+      },
+      { passive: false }
+    );
+
+    button.addEventListener(
+      "touchend",
+      (event: TouchEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        lastTouchNavigation = Date.now();
+        onNavigate();
+      },
+      { passive: false }
+    );
+
     button.addEventListener("click", (event: MouseEvent) => {
       event.preventDefault();
       event.stopPropagation();
+      if (Date.now() - lastTouchNavigation < 500) {
+        return;
+      }
       onNavigate();
     });
   }
