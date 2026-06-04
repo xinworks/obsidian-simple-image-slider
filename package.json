@@ -1,6 +1,6 @@
 {
   "name": "obsidian-simple-image-slider",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A lightweight image slider and caption renderer for image embeds.",
   "main": "main.js",
   "scripts": {
