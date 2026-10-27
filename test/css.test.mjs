@@ -28,9 +28,10 @@ test("image fit and frame sizing are stable", () => {
   const frame = ruleBody(".simple-image-slider__frame");
   const image = ruleBody(".simple-image-slider__image");
 
-  assert.match(frame, /aspect-ratio\s*:\s*4\s*\/\s*3/);
+  assert.doesNotMatch(frame, /aspect-ratio\s*:/);
   assert.match(frame, /overflow\s*:\s*hidden/);
   assert.match(image, /object-fit\s*:\s*contain/);
   assert.match(image, /height\s*:\s*auto/);
-  assert.match(image, /width\s*:\s*100%/);
+  assert.match(image, /max-width\s*:\s*100%/);
+  assert.match(image, /width\s*:\s*auto/);
 });

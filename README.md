@@ -60,7 +60,7 @@ For ordinary images, `|300` and `|300x200` are treated as Obsidian size aliases,
 - The current image is preserved when the same slider block re-renders after editing.
 - Small accidental drag movement is ignored.
 - The image uses `object-fit: contain`.
-- The image area uses a stable 4:3 canvas and prioritizes filling the available width.
+- The image area uses the available note width and a shared canvas sized to the gallery's images, with a viewport height limit. The canvas stays stable when switching slides.
 - Hover effects do not resize, crop, scale, shift, or reflow the image area.
 - Missing or unsupported lines are skipped; valid images still render.
 - If no valid images are found, the block renders `No valid images found.`
