@@ -1,0 +1,51 @@
+name: Publish 0.1.6
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/release-0.1.6.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: publish-0.1.6
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - name: Check release metadata and build
+        run: |
+          node -e "const m=require('./manifest.json'); if(m.version!=='0.1.6'||require('./package.json').version!==m.version||require('./versions.json')[m.version]!==m.minAppVersion) process.exit(1)"
+          git diff --exit-code -- main.js
+      - name: Create release with plugin assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view 0.1.6 >/dev/null 2>&1; then
+            echo "Release already exists; refusing to overwrite."
+            exit 1
+          fi
+          cat > /tmp/release-notes.md <<'NOTES'
+          Fix wide-screen image sizing (#1, #2).
+          
+          - Use the available note width instead of a 740px limit.
+          - Size a shared canvas from gallery images while preserving image proportions.
+          - Keep the canvas stable when switching loaded images.
+          
+          Validation: 8 unit tests, TypeScript/production build, and 10 Chromium browser regression scenarios passed. Obsidian application-level manual verification remains pending; browser tests use mocked host APIs.
+          
+          Requires Obsidian 1.5.0 or later.
+          NOTES
+          gh release create 0.1.6 main.js manifest.json styles.css --target "$GITHUB_SHA" --title "0.1.6 — Wide-screen support" --notes-file /tmp/release-notes.md --draft
+          gh release edit 0.1.6 --draft=false --latest
