@@ -373,6 +373,17 @@ export default class SimpleImageSliderPlugin extends Plugin {
     wrapper.setAttr("role", "group");
 
     const frame = wrapper.createDiv({ cls: "simple-image-slider__frame" });
+    // Keep one canvas for the whole gallery so switching slides does not reflow
+    // the note. Hidden images contribute their fitted dimensions to its height.
+    const sizing = frame.createDiv({
+      cls: "simple-image-slider__sizing",
+      attr: { "aria-hidden": "true" }
+    });
+    for (const slide of slides) {
+      sizing.createEl("img", {
+        attr: { src: slide.resourcePath, alt: "", draggable: "false" }
+      });
+    }
     const track = frame.createDiv({ cls: "simple-image-slider__track" });
     const slideSlots: SlideSlot[] = ([-1, 0, 1] as const).map((offset) => {
       const element = track.createDiv({ cls: "simple-image-slider__slide" });

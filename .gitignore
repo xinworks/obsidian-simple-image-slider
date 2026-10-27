@@ -13,3 +13,6 @@ coverage/
 .idea/
 
 *.tsbuildinfo
+
+# Browser regression artifacts
+test-results/
